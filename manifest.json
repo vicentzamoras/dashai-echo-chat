@@ -1,0 +1,31 @@
+{
+  "manifest_version": "1",
+  "id": "echo-chat",
+  "name": "Echo Chat",
+  "authors": [
+    {
+      "name": "Vicente Zamora",
+      "url": "https://github.com/vicentzamoras"
+    }
+  ],
+  "project_urls": {
+    "Homepage": "https://github.com/vicentzamoras/dashai-echo-chat",
+    "Issues": "https://github.com/vicentzamoras/dashai-echo-chat/issues"
+  },
+  "description": "A chat model that echoes your message, or tells a joke with /joke.",
+  "version": "1.0.0",
+  "min_app_version": "0.10.0",
+  "components": [
+    {
+      "class": "echo_chat:EchoChatTask",
+      "type": "GenerativeTask"
+    },
+    {
+      "class": "echo_chat:EchoModel",
+      "type": "GenerativeModel"
+    }
+  ],
+  "dependencies": [
+    "pyjokes>=0.6"
+  ]
+}

@@ -1,0 +1,43 @@
+name: Release plugin
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write      # create the release and upload the .zip
+  id-token: write      # the workflow's identity, to sign with Sigstore
+  attestations: write  # store the attestation in GitHub
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set manifest version from the tag
+        run: |
+          jq --arg v "${GITHUB_REF_NAME#v}" '.version = $v' manifest.json > manifest.tmp
+          mv manifest.tmp manifest.json
+
+      - name: Build plugin zip
+        run: |
+          zip_name="$(jq -r .id manifest.json)-${GITHUB_REF_NAME}.zip"
+          echo "ZIP=$zip_name" >> "$GITHUB_ENV"
+          zip -r "$zip_name" . -x ".git/*" ".github/*" "*.zip"
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ env.ZIP }}
+
+      - name: Create release or upload to it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$ZIP" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$ZIP" \
+              --title "$GITHUB_REF_NAME" --notes "Plugin release"
+          fi
